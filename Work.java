@@ -1,32 +1,67 @@
 import bc.*;
 import java.util.*;
-public class Work extends Module {
+public class Work{
+	private static Work instance;
+	private Map<Unit, WorkTask> tasks;
+	
 	public Work() {
 	}
+	public static Work instance() {
+		if (instance == null) {
+			instance = new Work();
+		}
+		return instance;
+	}
 	
-	public void run(GameController gc) {
-		if (!units.get(UnitType.Worker).isEmpty()) {
-			int id = units.get(UnitType.Worker).get(0).id();
-			// No factory
-			if (units.get(UnitType.Factory).size() == 0) {
-				if (gc.canBlueprint(id, UnitType.Factory, Direction.South)) {
-					gc.blueprint(id, UnitType.Factory, Direction.South);
-				} else {
-					System.out.println("[Work] Worker "+id+" couldn't blueprint "
-							+UnitType.Factory.toString()+" in Direction "+Direction.South.toString());
-				}
-			} else if (units.get(UnitType.Factory).get(0).structureIsBuilt() != 0) {
-				int factoryId = units.get(UnitType.Factory).get(0).id();
-				if (gc.canBuild(id, factoryId)) {
-					gc.build(id, factoryId);
-				} else {
-					System.out.println("[Work] Worker "+id+" couldn't build blueprint "+factoryId);
-				}
-			} else {
-				System.out.println("[Work] Factory completed");
-			}
+	public void run() {}
+	
+	public boolean Harvest(Location location) {
+		return false;
+	}
+	public boolean Build(UnitType type, Location location) {
+		Unit worker = getIdleWorker();
+		if (worker != null) {
+			tasks.put(worker, new WorkTask(WorkTaskType.Blueprint, location));
+			return true;
 		} else {
-			System.out.println("[Work] Don't have worker");
+			return false;
+		}
+	}
+	public boolean Repair(Location location) {
+		return false;
+	}
+	
+	private Unit getIdleWorker() {
+		List<Unit> workers = Units.instance().units.get(UnitType.Worker);
+		for (Unit worker: workers) {
+			if (worker.location().isOnPlanet(Planet.Earth)
+					&& tasks.get(worker).type == WorkTaskType.Idle) {
+				return worker;
+			}
+		}
+		return null;
+	}
+	
+	private class WorkTask {
+		public WorkTaskType type;
+		public Location location;
+		WorkTask(WorkTaskType type, Location location) {
+			this.type = type;
+			this.location = location;
+		}
+	}
+	private enum WorkTaskType {
+		Idle(0),
+		Harvest(1),
+		Blueprint(2),
+		Build(3),
+		Repair(4);
+		private final int value;
+		WorkTaskType() {
+			this.value = 0;
+		}
+		WorkTaskType(int value) {
+			this.value = value;
 		}
 	}
 }

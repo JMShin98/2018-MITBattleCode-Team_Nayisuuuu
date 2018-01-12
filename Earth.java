@@ -1,20 +1,18 @@
 import java.util.*;
 import bc.*;
 
-class Earth extends Module {
-	private Work work;
-	private Produce produce;
+class Earth {
+	public static Earth instance;
 	
 	public Earth() {
-		work = new Work();
-		produce = new Produce();
+	}
+	public static Earth instance() {
+		if (instance == null) {
+			instance = new Earth();
+		}
+		return instance;
 	}
 	
-	public void run(GameController gc) {
-		work.update(units);
-		work.run(gc);
-		
-		produce.update(units);
-		produce.run(gc);
+	public void run() {
 	}
 }

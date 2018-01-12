@@ -6,25 +6,23 @@ import java.util.Map;
 import bc.*;
 
 public class Player {
+	private static GameController gc;
+	
 	public static void main(String[] args) {
-        // Connect to the manager, starting the game
-        GameController gc = new GameController();
-		System.out.println("[Player] Connected to gc");
-        Earth earth = new Earth();
-        System.out.println("[Player] Earth created");
-		
         while (true) {
-        	if (gc.planet() == Planet.Earth) {
-        		earth.update(getUnits(gc.myUnits()));
-            	earth.run(gc);
+        	Units.instance().run();
+        	if (gc().planet() == Planet.Earth) {
+            	Earth.instance().run();
+        	} else {
+        		Mars.instance().run();
         	}
-        	
-            // Submit the actions we've done, and wait for our next turn.
-            gc.nextTurn();
+        	Work.instance().run();
+
+        	gc().nextTurn();
         }
 	}
 	
-	private static Map<UnitType, List<Unit>> getUnits(VecUnit vec) {
+	public static Map<UnitType, List<Unit>> getUnits(VecUnit vec) {
 		Map<UnitType, List<Unit>> units = new HashMap<>();
 		for (UnitType type: UnitType.values()) {
 			units.put(type, new ArrayList<>());
@@ -35,5 +33,12 @@ public class Player {
 			units.get(unit.unitType()).add(unit);
 		}
 		return units;
+	}
+	
+	public static GameController gc() {
+		if (gc == null) {
+			gc = new GameController();
+		}
+		return gc;
 	}
 }

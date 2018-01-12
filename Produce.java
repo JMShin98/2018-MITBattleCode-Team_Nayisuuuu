@@ -1,23 +1,29 @@
-import java.util.*;
 import bc.*;
 
-class Produce extends Module {
+class Produce {
+	private static Produce instance;
+	
 	public Produce() {
 	}
+	public static Produce instance() {
+		if (instance == null) {
+			instance = new Produce();
+		}
+		return instance;
+	}
 	
-	public void run(GameController gc) {
-		for (UnitType type: UnitType.values()) {
-			if (units.get(type).isEmpty()) {
-				for (Unit factory: units.get(UnitType.Factory)) {
-					int id = factory.id();
-					if (gc.canProduceRobot(id, type)) {
-						gc.produceRobot(id, type);
-						System.out.println("[Produce] Factory "+id+" produced a "+type.toString());
-						return;
-					}
+	public boolean produce(UnitType type, Planet planet) {
+		for (Unit factory: Units.instance().units.get(UnitType.Factory)) {
+			if (factory.location().isOnPlanet(planet)) {
+				int id = factory.id();
+				if (Player.gc().canProduceRobot(id, type)) {
+					Player.gc().produceRobot(id, type);
+					System.out.println("[Produce] Factory "+id+" produced a "+type.toString());
+					return true;
 				}
-				System.out.println("[Produce] Factories could not produce "+type.toString());
 			}
 		}
+		System.out.println("[Produce] Factories could not produce "+type.toString());
+		return false;
 	}
 }
