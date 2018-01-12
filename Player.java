@@ -9,17 +9,32 @@ public class Player {
 	private static GameController gc;
 	
 	public static void main(String[] args) {
-        while (true) {
-        	Units.instance().run();
-        	if (gc().planet() == Planet.Earth) {
-            	Earth.instance().run();
-        	} else {
-        		Mars.instance().run();
-        	}
-        	Work.instance().run();
-
-        	gc().nextTurn();
-        }
+		while (true) {
+			gatherInfo();
+			makeDecision();
+			execute();
+			
+			gc().nextTurn();
+		}
+	}
+	
+	// gathering info phase
+	public static void gatherInfo() {
+		Units.instance().run();
+	}
+	
+	// decision making phase
+	public static void makeDecision() {
+		if (gc().planet() == Planet.Earth) {
+			Earth.instance().run();
+		} else {
+			Mars.instance().run();
+		}
+	}
+	
+	// executing phase
+	public static void execute() {
+		Work.instance().run();
 	}
 	
 	public static Map<UnitType, List<Unit>> getUnits(VecUnit vec) {
