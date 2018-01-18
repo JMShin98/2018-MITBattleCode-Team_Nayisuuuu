@@ -32,11 +32,9 @@ class Produce {
 			int id = factory.id();
 			if (Player.gc().canProduceRobot(id, type)) {
 				Player.gc().produceRobot(id, type);
-				System.out.println("[Produce] Factory "+id+" produced a "+type.toString());
 				return true;
 			}
 		}
-		System.out.println("[Produce] Factories could not produce "+type.toString());
 		return false;
 	}
 }

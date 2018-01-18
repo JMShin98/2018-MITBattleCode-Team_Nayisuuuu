@@ -13,12 +13,12 @@ public class Player {
 	public static void main(String[] args) {
         while (true) {
         	Units.instance().run();
-//        	if (gc().planet() == Planet.Earth) {
-//            	Earth.instance().run();
-//        	} else {
-//        		Mars.instance().run();
-//        	}
-        	Earth.instance().run();
+        	if (gc().planet() == Planet.Earth) {
+            	Earth.instance().run();
+        	} else {
+        		Mars.instance().run();
+        	}
+        	Army.instance().run();
         	Produce.instance().run();
         	Work.instance().run();
 

@@ -22,10 +22,20 @@ public class Move {
 	}
 	
 	public boolean move(Unit unit, MapLocation dest) {
+		MapLocation ml;
+		if (unit.location().isOnMap()) {
+			ml = unit.location().mapLocation();
+		} else if (unit.location().isInGarrison()) {
+			ml = Player.gc().unit(unit.location().structure()).location().mapLocation();
+		} else {
+			return false;
+		}
+		
 		if (!paths.containsKey(unit.id())
 				|| !new Location(dest).equals(new Location(paths.get(unit.id()).dest))) {
-			paths.put(unit.id(), new Path(unit.location().mapLocation(), dest));
+			paths.put(unit.id(), new Path(ml, dest));
 		}
+		
 		Path path = paths.get(unit.id());
 		if (path.path.isEmpty()) {
 			return false;
@@ -36,6 +46,9 @@ public class Move {
 				if (Player.gc().canMove(unit.id(), direction)) {
 					Player.gc().moveRobot(unit.id(), direction);
 					path.path.remove(0);
+				} else {
+					grids.put(new Location(dest), getGrid(dest));
+					paths.put(unit.id(), new Path(ml, dest));
 				}
 			}
 			return true;
@@ -110,69 +123,6 @@ public class Move {
 			}
 		}
 		
-		for (int i = 0; i < grid.length; i++) {
-			for (int j = 0; j < grid[0].length; j++) {
-				if (grid[j][i] == null) {
-					System.out.print("- ");
-				} else {
-					System.out.print(grid[j][i].ordinal()+" ");
-				}
-			}
-			System.out.println();
-		}
-		
 		return grid;
-	}
-	
-	private class Location extends Point {
-		final int[] dx = {0, 1, 1, 1, 0, -1, -1, -1, 0};
-		final int[] dy = {1, 1, 0, -1, -1, -1, 0, 1, 0};
-		
-		public Location(Location l) {
-			super(l);
-		}
-		public Location(int x, int y) {
-			super(x, y);
-		}
-		public Location(MapLocation ml) {
-			this(ml.getX(), ml.getY());
-		}
-		
-		public Location add(Direction d) {
-			Location l = new Location(this);
-			l.translate(dx[d.ordinal()], dy[d.ordinal()]);
-			return l;
-		}
-		public List<Location> getAdjacentLocations() {
-			List<Location> list = new LinkedList<>();
-			for (int i = 0; i < 8; i++) {
-				Location l = new Location(this);
-				l.translate(dx[i], dy[i]);
-				list.add(l);
-			}
-			return list;
-		}
-		
-		public MapLocation toMapLocation() {
-			return toMapLocation(Planet.Earth);
-		}
-		public MapLocation toMapLocation(Planet planet) {
-			return new MapLocation(planet, x, y);
-		}
-		
-		public Direction directionTo(Location other) {
-			int dx = other.x - x;
-			int dy = other.y - y;
-			for (int i = 0; i < 9; i++) {
-				if (this.dx[i] == dx && this.dy[i] == dy)
-					return directions[i];
-			}
-			return null;
-		}
-		
-		public boolean isOnPlanet(Planet planet) {
-			return 0 <= x && x < Player.pm(planet).getWidth()
-					&& 0 <= y && y < Player.pm(planet).getHeight();
-		}
 	}
 }

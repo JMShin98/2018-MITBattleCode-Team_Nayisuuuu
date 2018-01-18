@@ -2,7 +2,7 @@ import bc.*;
 import java.util.*;
 public class Work {
 	private static Work instance;
-	private Map<Integer, Task> tasks;
+	public Map<Integer, Task> tasks;
 	
 	public Work() {
 		tasks = new HashMap<>();
@@ -24,34 +24,30 @@ public class Work {
 			Task task = tasks.get(id);
 			Direction direction = worker.location().mapLocation().directionTo(task.mapLocation);
 			
-			if (worker.workerHasActed() == 0) {
-				continue;
-			} else if (!worker.location().mapLocation().isAdjacentTo(task.mapLocation)) {
+			if (!worker.location().mapLocation().isAdjacentTo(task.mapLocation)) {
 				Move.instance().move(worker, task.mapLocation);
 			} else if (task.taskType == TaskType.Harvest) {
 				if (Player.gc().karboniteAt(task.mapLocation) == 0) {
 					tasks.remove(id);
 					continue;
 				}
-				if (worker.workerHasActed() != 0
-						&& Player.gc().canHarvest(id, direction)) {
+				if (Player.gc().canHarvest(id, direction)) {
 					Player.gc().harvest(id, direction);
 				}
-			} else if (task.taskType == TaskType.Blueprint) {
-				if (worker.workerHasActed() != 0
-						&& Player.gc().canBlueprint(id, task.unitType, direction)) {
-					Player.gc().blueprint(id, task.unitType, direction);
-					tasks.put(id, new Task(TaskType.Build, task.mapLocation));
-				}
 			} else if (task.taskType == TaskType.Build) {
-				Unit structure = Player.gc().senseUnitAtLocation(task.mapLocation);
-				if (structure.structureIsBuilt() != 0) {
-					tasks.remove(id);
-					continue;
-				}
-				if (worker.workerHasActed() != 0
-						&& Player.gc().canBuild(id, structure.id())) {
-					Player.gc().build(id, structure.id());
+				if (Player.gc().hasUnitAtLocation(task.mapLocation)) {
+					Unit structure = Player.gc().senseUnitAtLocation(task.mapLocation);
+					if (structure.structureIsBuilt() == 0) {
+						if (Player.gc().canBuild(id, structure.id())) {
+							Player.gc().build(id, structure.id());
+						}
+					} else {
+						tasks.remove(id);
+					}
+				} else {
+					if (Player.gc().canBlueprint(id, task.unitType, direction)) {
+						Player.gc().blueprint(id, task.unitType, direction);
+					}
 				}
 			} else if (task.taskType == TaskType.Repair) {
 				Unit structure = Player.gc().senseUnitAtLocation(task.mapLocation);
@@ -59,42 +55,53 @@ public class Work {
 					tasks.remove(id);
 					continue;
 				}
-				if (worker.workerHasActed() != 0
-						&& Player.gc().canRepair(id, structure.id())) {
+				if (Player.gc().canRepair(id, structure.id())) {
 					Player.gc().repair(id, structure.id());
 				}
 			}
+		}
+	}
+	
+	public boolean harvest(Unit worker, MapLocation mapLocation) {
+		tasks.put(worker.id(), new Task(TaskType.Harvest, mapLocation));
+		return true;
+	}
+	public boolean build(Unit worker, UnitType type, MapLocation mapLocation) {
+		MapLocation buildLocation = getBuildLocation(mapLocation);
+		if (buildLocation == null)
+			return false;
+		tasks.put(worker.id(), 
+				new Task(TaskType.Build, type, buildLocation));
+		return true;
+	}
+	public boolean repair(Unit worker, MapLocation mapLocation) {
+		tasks.put(worker.id(), new Task(TaskType.Repair, mapLocation));
+		return true;
+	}
+	
+	private MapLocation getBuildLocation(MapLocation ml) {
+		Queue<Location> open = new LinkedList<>();
+		Set<Location> closed = new HashSet<>();
+		PlanetMap pm = Player.pm(ml.getPlanet());
+		
+		open.add(new Location(ml));
+		while (!open.isEmpty()) {
+			Location l = open.remove();
+			closed.add(l);
 			
+			if (pm.isPassableTerrainAt(l.toMapLocation()) != 0
+					&& !Player.gc().hasUnitAtLocation(l.toMapLocation())) {
+				return l.toMapLocation();
+			}
+			
+			for (Location al: l.getAdjacentLocations()) {
+				if (al.isOnPlanet(ml.getPlanet())
+						&& !open.contains(al) && !closed.contains(al)) {
+					open.add(al);
+				}
+			}
 		}
-	}
-	
-	public boolean harvest(MapLocation mapLocation) {
-		Unit worker = getIdleWorker();
-		if (worker != null) {
-			tasks.put(worker.id(), new Task(TaskType.Harvest, mapLocation));
-			return true;
-		} else {
-			return false;
-		}
-	}
-	
-	public boolean build(UnitType type, MapLocation mapLocation) {
-		Unit worker = getIdleWorker();
-		if (worker != null) {
-			tasks.put(worker.id(), new Task(TaskType.Blueprint, type, mapLocation));
-			return true;
-		} else {
-			return false;
-		}
-	}
-	public boolean repair(MapLocation mapLocation) {
-		Unit worker = getIdleWorker();
-		if (worker != null) {
-			tasks.put(worker.id(), new Task(TaskType.Repair, mapLocation));
-			return true;
-		} else {
-			return false;
-		}
+		return null;
 	}
 	
 	// returns the first worker that's idle
@@ -129,9 +136,8 @@ public class Work {
 	private enum TaskType {
 		Idle(0),
 		Harvest(1),
-		Blueprint(2),
-		Build(3),
-		Repair(4);
+		Build(2),
+		Repair(3);
 		private final int value;
 		TaskType() {
 			this.value = 0;
