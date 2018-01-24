@@ -3,9 +3,11 @@ import java.util.*;
 public class Work {
 	private static Work instance;
 	public Map<Integer, Task> tasks;
+	public Set<Location> karboniteLocations;
 	
 	public Work() {
 		tasks = new HashMap<>();
+		karboniteLocations = getInitialKarboniteLocations();
 	}
 	
 	public static Work instance() {
@@ -31,6 +33,7 @@ public class Work {
 					tasks.remove(id);
 					continue;
 				}
+				
 				if (Player.gc().canHarvest(id, direction)) {
 					Player.gc().harvest(id, direction);
 				}
@@ -63,9 +66,20 @@ public class Work {
 	}
 	
 	public boolean harvest(Unit worker, MapLocation mapLocation) {
-		tasks.put(worker.id(), new Task(TaskType.Harvest, mapLocation));
+		if (mapLocation == null) {
+			return false;
+		}
+		
+		Direction directionToLoc = worker.location().mapLocation().directionTo(mapLocation);
+		if (worker.location().mapLocation().isAdjacentTo(mapLocation) && 
+				Player.gc().canHarvest(worker.id(), directionToLoc)) {
+			Player.gc().harvest(worker.id(), directionToLoc);
+		} else {
+			Move.instance().move(worker, mapLocation);
+		}
 		return true;
 	}
+	
 	public boolean build(Unit worker, UnitType type, MapLocation mapLocation) {
 		MapLocation buildLocation = getBuildLocation(mapLocation);
 		if (buildLocation == null)
@@ -74,6 +88,7 @@ public class Work {
 				new Task(TaskType.Build, type, buildLocation));
 		return true;
 	}
+	
 	public boolean repair(Unit worker, MapLocation mapLocation) {
 		tasks.put(worker.id(), new Task(TaskType.Repair, mapLocation));
 		return true;
@@ -112,6 +127,56 @@ public class Work {
 					&& tasks.get(worker).taskType == TaskType.Idle) {
 				return worker;
 			}
+		}
+		return null;
+	}
+	
+	// finds all the initial locations of Karbonite 
+	private Set<Location> getInitialKarboniteLocations() {
+		Set<Location> set = new HashSet<Location>();
+		PlanetMap earthMap = Player.gc().startingMap(Planet.Earth);
+		int width = (int) earthMap.getWidth();
+		int height = (int) earthMap.getHeight();
+		MapLocation currLocation = null;
+		
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				currLocation = new MapLocation(Planet.Earth, i, j);
+				if (earthMap.initialKarboniteAt(currLocation) != 0) {
+					set.add(new Location(i, j));
+				}
+			}
+		}
+		return set;
+	}
+	
+	public MapLocation getClosestKarbonite(MapLocation currentLocation) {
+		if (!this.karboniteLocations.isEmpty()) {
+			int minDistance = 999999;
+			Location targetLoc = null;
+			
+			for (Location loc : this.karboniteLocations) {
+				MapLocation mapLoc = loc.toMapLocation();
+				// if the karbonite is depleted remove from the set of karbonite locations
+				if (Player.gc().canSenseLocation(mapLoc) && Player.gc().karboniteAt(mapLoc) == 0) {
+					karboniteLocations.remove(loc);
+					break;
+				}
+			}
+			
+			for (Location loc : this.karboniteLocations) {
+				MapLocation mapLoc = loc.toMapLocation();
+					int distance = (int) currentLocation.distanceSquaredTo(mapLoc);
+					if (distance < minDistance) {
+						minDistance = distance;
+						targetLoc = loc;
+					}
+			}
+			if (targetLoc == null) {
+				return null;
+			}
+			
+			return targetLoc.toMapLocation();
 		}
 		return null;
 	}

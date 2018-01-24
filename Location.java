@@ -1,6 +1,7 @@
 import java.awt.Point;
 import java.util.LinkedList;
 import java.util.List;
+import java.lang.Math;
 
 import bc.Direction;
 import bc.MapLocation;
@@ -52,7 +53,7 @@ public class Location extends Point {
 	}
 
 	public MapLocation toMapLocation(Planet planet) {
-		return new MapLocation(planet, x, y);
+			return new MapLocation(planet, x, y);
 	}
 
 	public Direction directionTo(Location other) {
@@ -64,8 +65,18 @@ public class Location extends Point {
 		}
 		return null;
 	}
+	
+	public int distanceTo(Location other) {
+		int dx = other.x - x;
+		int dy = other.y - y;
+		return dx * dx + dy * dy;
+	}
 
 	public boolean isOnPlanet(Planet planet) {
 		return 0 <= x && x < Player.pm(planet).getWidth() && 0 <= y && y < Player.pm(planet).getHeight();
+	}
+	
+	public String toString() {
+		return "(" + this.getX() + ", " + this.getY() + ")";
 	}
 }

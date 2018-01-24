@@ -11,19 +11,19 @@ public class Player {
 	private static PlanetMap mm;
 	
 	public static void main(String[] args) {
-        while (true) {
-        	Units.instance().run();
-        	if (gc().planet() == Planet.Earth) {
-            	Earth.instance().run();
-        	} else {
-        		Mars.instance().run();
-        	}
-        	Army.instance().run();
-        	Produce.instance().run();
-        	Work.instance().run();
+		while (true) {
+			Units.instance().run();
+			if (gc().planet() == Planet.Earth) {
+				Earth.instance().run();
+			} else {
+				Mars.instance().run();
+			}
+			Army.instance().run();
+			Produce.instance().run();
+			Work.instance().run();
 
-        	gc().nextTurn();
-        }
+			gc().nextTurn();
+		}
 	}
 	
 	public static Map<UnitType, List<Unit>> getUnits(VecUnit vec) {

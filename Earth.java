@@ -32,5 +32,13 @@ class Earth {
 		} else {
 			Produce.instance().produce(UnitType.Ranger);
 		}
+		
+		
+		for (Unit worker : Units.instance().units.get(UnitType.Worker)) {
+			if (worker.location().isOnMap()) {
+				Work.instance().harvest(worker, Work.instance().getClosestKarbonite(worker.location().mapLocation()));
+			}
+		}
+		System.out.println(Player.gc().karbonite());
 	}
 }
