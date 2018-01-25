@@ -5,6 +5,7 @@ class Earth {
 	private static Earth instance;
 	public List<Location> startLocations;
 	private List<UnitType> opening;
+	private List<UnitType> research;
 	
 	public Earth() {
 		startLocations = new LinkedList<Location>();
@@ -14,10 +15,22 @@ class Earth {
 			startLocations.add(inverted);
 		}
 		
+		research = new LinkedList<>();
+		research.add(UnitType.Worker); // Worker harvest upgrade
+		research.add(UnitType.Ranger); // Ranger movement CD reduction
+		research.add(UnitType.Healer); // Increases healing ability
+		research.add(UnitType.Rocket); // Rocket technology
+		research.add(UnitType.Rocket); // Rocket travel time reduction
+		research.add(UnitType.Healer); // More healing
+		research.add(UnitType.Ranger); // Ranger sight increase
+		research.add(UnitType.Rocket); // Increased capacity
+		
 		opening = new LinkedList<>();
 		opening.add(UnitType.Factory);
 		opening.add(UnitType.Factory);
+		opening.add(UnitType.Rocket);
 	}
+	
 	public static Earth instance() {
 		if (instance == null) {
 			instance = new Earth();
@@ -36,6 +49,12 @@ class Earth {
 						break;
 					}
 				}
+			}
+		}
+		
+		if (!research.isEmpty()) {
+			for (UnitType branch : research) {
+				Player.gc().queueResearch(branch);
 			}
 		}
 		
