@@ -4,14 +4,19 @@ import bc.*;
 class Earth {
 	private static Earth instance;
 	public List<Location> startLocations;
+	private List<UnitType> opening;
 	
 	public Earth() {
 		startLocations = new LinkedList<Location>();
 		for (Unit unit: Units.instance().units.get(UnitType.Worker)) {
 			Location l = new Location(unit.location().mapLocation());
-			Location inverted = l.invert(Planet.Earth);
+			Location inverted = l.invert();
 			startLocations.add(inverted);
 		}
+		
+		opening = new LinkedList<>();
+		opening.add(UnitType.Factory);
+		opening.add(UnitType.Factory);
 	}
 	public static Earth instance() {
 		if (instance == null) {
@@ -21,24 +26,23 @@ class Earth {
 	}
 	
 	public void run() {
-		if (Units.instance().units.get(UnitType.Factory).isEmpty()
-				&& !Units.instance().units.get(UnitType.Worker).isEmpty()) {
-			Unit worker = Units.instance().units.get(UnitType.Worker).get(0);
-			Work.instance().build(worker, UnitType.Factory, worker.location().mapLocation());
+		if (!opening.isEmpty()) {
+			UnitType type = opening.get(0);
+			for (Unit worker: Units.instance().units.get(UnitType.Worker)) {
+				if (!Work.instance().isBuilding(worker)) {
+					if (Work.instance().build(worker, type, worker.location().mapLocation())) {
+						System.out.println("Building "+ type.toString());
+						opening.remove(0);
+						break;
+					}
+				}
+			}
 		}
 		
-		if (Units.instance().units.get(UnitType.Worker).size() <= 2) {
-			Produce.instance().produce(UnitType.Worker);
-		} else {
-			Produce.instance().produce(UnitType.Ranger);
-		}
-		
-		
-		for (Unit worker : Units.instance().units.get(UnitType.Worker)) {
-			if (worker.location().isOnMap()) {
+		for (Unit worker: Units.instance().units.get(UnitType.Worker)) {
+			if (!Work.instance().isBuilding(worker)) {
 				Work.instance().harvest(worker, Work.instance().getClosestKarbonite(worker.location().mapLocation()));
 			}
 		}
-		System.out.println(Player.gc().karbonite());
 	}
 }

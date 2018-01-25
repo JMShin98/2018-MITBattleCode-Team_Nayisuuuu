@@ -12,17 +12,19 @@ public class Location extends Point {
 	final int[] dx = { 0, 1, 1, 1, 0, -1, -1, -1, 0 };
 	final int[] dy = { 1, 1, 0, -1, -1, -1, 0, 1, 0 };
 	private Direction[] directions = Direction.values();
+	public Planet planet;
 
-	public Location(Location l) {
-		super(l);
-	}
-
-	public Location(int x, int y) {
+	public Location(Planet planet, int x, int y) {
 		super(x, y);
+		this.planet = planet;
+	}
+	
+	public Location(Location l) {
+		this(l.planet, l.x, l.y);
 	}
 
 	public Location(MapLocation ml) {
-		this(ml.getX(), ml.getY());
+		this(ml.getPlanet(), ml.getX(), ml.getY());
 	}
 
 	public Location add(Direction d) {
@@ -31,11 +33,11 @@ public class Location extends Point {
 		return l;
 	}
 	
-	public Location invert(Planet planet) {
+	public Location invert() {
 		PlanetMap pm = Player.pm(planet);
 		int width = (int) pm.getWidth();
 		int height = (int) pm.getHeight();
-		return new Location(width - x, height - y);
+		return new Location(planet, width - x, height - y);
 	}
 
 	public List<Location> getAdjacentLocations() {
@@ -49,11 +51,7 @@ public class Location extends Point {
 	}
 
 	public MapLocation toMapLocation() {
-		return toMapLocation(Planet.Earth);
-	}
-
-	public MapLocation toMapLocation(Planet planet) {
-			return new MapLocation(planet, x, y);
+		return new MapLocation(planet, x, y);
 	}
 
 	public Direction directionTo(Location other) {
@@ -72,7 +70,7 @@ public class Location extends Point {
 		return dx * dx + dy * dy;
 	}
 
-	public boolean isOnPlanet(Planet planet) {
+	public boolean isOnPlanet() {
 		return 0 <= x && x < Player.pm(planet).getWidth() && 0 <= y && y < Player.pm(planet).getHeight();
 	}
 	

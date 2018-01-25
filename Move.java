@@ -111,8 +111,8 @@ public class Move {
 			for (Location al: l.getAdjacentLocations()) {
 				if (!closed.contains(al)
 						&& !open.contains(al)
-						&& al.isOnPlanet(p)
-						&& pm.isPassableTerrainAt(al.toMapLocation(p)) != 0) {
+						&& al.isOnPlanet()
+						&& pm.isPassableTerrainAt(al.toMapLocation()) != 0) {
 					grid[al.x][al.y] = al.directionTo(l);
 					if (Player.gc().hasUnitAtLocation(al.toMapLocation())) {
 						closed.add(al);
